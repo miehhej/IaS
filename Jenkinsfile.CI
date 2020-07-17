@@ -28,31 +28,6 @@ pipeline {
     		steps {
     		// input('Do you want to proceed?')
     			script {
-    			    
-    			    jobs = sh(
-    			      script: 'docker image ls localhost:8082/grw --format  "{{ .Tag }}" ',
-    			      returnStdout: true,
-    			    ).trim()
-    			    imageslist = "${jobs}"
-    			    // aaa = input message: 'Select build to deploy', ok: 'Release!', parameters: [choice(name: 'RELEASE_SCOPE', choices: "${imageslist}", description: 'Build number' )]
-    			    def aaa=""
-    			    echo "---------------"
-    			    echo "${jobs}"
-    			    echo "---------------"
-                    imageslist.each {
-                      aaa += it + '\n'
-                    }
-    			    echo "${imageslist}"
-    			    def selectedProperty = input(
-    			        id: 'userInput', 
-    			        message: 'Select build to deploy', 
-    			        parameters: [ [
-    			          $class: 'ChoiceParameterDefinition', 
-    			          choices: "${jobs}", 
-    			          description: 'Properties', 
-    			          name: 'BuildN' ]
-    			        ] 
-    			      )
     				def port = input(
     					id:				'portnumber',
     					message: 		'Enter Port Number JAVA_APP will listen on, 1000-65535',
@@ -63,9 +38,9 @@ pipeline {
     				)
     				PN = "${port}"			    	
     				echo "${port}"
-    			//	input('Do you want to proceed?')
-    				}
-    					}    	}
+    			}
+    		}    	
+    	}
     	stage("Build") {
         	steps {
 				sh "mvn -DskipTests clean install -f ./spring-boot-samples/spring-boot-sample-web-ui/pom.xml"
@@ -73,7 +48,6 @@ pipeline {
 		}
 		stage ('Upload JAR to NEXUS') {
 			steps {
-				
 				echo "Current workspace is ${env.WORKSPACE}"
 				//sh "ls -la ${pwd()}/spring-boot-samples/spring-boot-sample-web-ui/target" 
 				script {
@@ -103,7 +77,6 @@ pipeline {
         			sh "docker build . -t ${NEXUS_DOCKER_URL}/grw:$BUILD_NUMBER && docker login ${NEXUS_DOCKER_URL} -u${nexus_creds_USR} -p${nexus_creds_PSW}  && docker push ${NEXUS_DOCKER_URL}/grw:$BUILD_NUMBER && docker  logout ${NEXUS_DOCKER_URL} "
         	//		sh 'docker container stop $(docker container ls --all --quiet|grep -v 449ae5e03ac8)'
 			//	#	docker container rm $(docker container ls –aq)
-					echo "${PN}"
         	//		sh "docker run -d  -p ${PN}:8080 --name grw_$BUILD_NUMBER ${NEXUS_DOCKER_URL}/grw:$BUILD_NUMBER"
         	          ansiColor('xterm') {
         				ansiblePlaybook([
@@ -128,5 +101,3 @@ pipeline {
         }
     }
 }
-
-
