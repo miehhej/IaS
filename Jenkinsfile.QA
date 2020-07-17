@@ -16,6 +16,7 @@ pipeline {
 	stages {
 	    stage('Build #') {
 	        steps {
+	          script{
 	            jobs = sh(
     			      script: 'docker image ls localhost:8082/grw --format  "{{ .Tag }}" ',
     			      returnStdout: true,
@@ -30,6 +31,7 @@ pipeline {
     			      name: 'BuildN' 
     			    ] ]
     		    )
+    		  }
     		}
 	    }
     	stage('Port Number input') {
