@@ -23,7 +23,7 @@ pipeline {
     			      ).trim()
     			def buildN = input(
     			    id: 'userInput', 
-    			    message: '!!!!!!!!!Select build to deploy', 
+    			    message: 'Select build to deploy', 
     			    parameters: [ [
     			      $class: 'ChoiceParameterDefinition', 
     			      choices: "${jobs}", 
@@ -31,7 +31,7 @@ pipeline {
     			      name: 'BuildN' 
     			    ] ]
     		    )
-    		    buildNum = "{buildN}"
+    		    buildNum = "${buildN}"
     		  }
     		}
 	    }
@@ -55,7 +55,7 @@ pipeline {
         	steps {
 					echo "${PN}"
         	        ansiColor('xterm') {
-        			ansiblePlaybook([
+        			  ansiblePlaybook([
         			    playbook: './qa-playbook.yml',
         				inventory: './hosts.ini',
         				credentialsId: "${host_ssh_creds}",
