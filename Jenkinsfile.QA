@@ -2,12 +2,7 @@ pipeline {
     agent any
     environment {
     	WORKDIR = "./spring-boot-samples/spring-boot-sample-web-ui"
-        NEXUS_VERSION = 'nexus3'
-        NEXUS_PROTOCOL = 'http'
-        NEXUS_URL = "localhost:8081"
-        NEXUS_DOCKER_URL = "localhost:8082"
         NEXUS_DOCKER_EXT_URL = "172.31.40.122:8082"
-        NEXUS_REPOSITORY = "GrW"
         NEXUS_CREDENTIAL_ID = "6f6c7b81-b8ac-4229-a669-fd7701a03500"
         host_ssh_creds = "901106e2-c876-49b7-af09-1d88e9fd6212"
         nexus_creds = credentials("6f6c7b81-b8ac-4229-a669-fd7701a03500")
