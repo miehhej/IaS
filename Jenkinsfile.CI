@@ -34,7 +34,7 @@ pipeline {
     			      returnStdout: true,
     			    ).trim()
     			    imageslist = "${jobs}"
-    			    // aaa = input message: 'User input required', ok: 'Release!', parameters: [choice(name: 'RELEASE_SCOPE', choices: "${imageslist}", description: 'What is the release scope?' )]
+    			    // aaa = input message: 'Select build to deploy', ok: 'Release!', parameters: [choice(name: 'RELEASE_SCOPE', choices: "${imageslist}", description: 'Build number' )]
     			    def aaa=""
     			    echo "---------------"
     			    echo "${jobs}"
@@ -45,15 +45,14 @@ pipeline {
     			    echo "${imageslist}"
     			    def selectedProperty = input(
     			        id: 'userInput', 
-    			        message: 'Choose properties file', 
+    			        message: 'Select build to deploy', 
     			        parameters: [ [
     			          $class: 'ChoiceParameterDefinition', 
     			          choices: "${jobs}", 
     			          description: 'Properties', 
-    			          name: 'prop'
+    			          name: 'BuildN' )]
     			        ] ]
     			      )
-    			    
     				def port = input(
     					id:				'portnumber',
     					message: 		'Enter Port Number JAVA_APP will listen on, 1000-65535',
