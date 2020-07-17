@@ -31,6 +31,7 @@ pipeline {
     			      name: 'BuildN' 
     			    ] ]
     		    )
+    		    buildNum = "{buildN}"
     		  }
     		}
 	    }
@@ -48,7 +49,6 @@ pipeline {
     				)
     				PN = "${port}"			    	
     				echo "${port}"
-    			//	input('Do you want to proceed?')
     				}
     					}    	}
         stage ('Deploy to QA') {
@@ -66,8 +66,8 @@ pipeline {
         				disableHostKeyChecking: true,
         				extraVars : [
           					"deployType": "QA",
-          					"build_Number": "${buildN}",
-          					"src_image": "${NEXUS_DOCKER_EXT_URL}/grw:${buildN}",
+          					"build_Number": "${buildNum}",
+          					"src_image": "${NEXUS_DOCKER_EXT_URL}/grw:${buildNum}",
           					"port_number": "${PN}"
           				]
           			])
