@@ -15,21 +15,21 @@ pipeline {
     }
 	stages {
 	    stage('Build #') {
-	        script {
-	          jobs = sh(
+	        steps {
+	            jobs = sh(
     			      script: 'docker image ls localhost:8082/grw --format  "{{ .Tag }}" ',
     			      returnStdout: true,
     			      ).trim()
-    			    def buildN = input(
-    			        id: 'userInput', 
-    			        message: 'Select build to deploy', 
-    			        parameters: [ [
-    			          $class: 'ChoiceParameterDefinition', 
-    			          choices: "${jobs}", 
-    			          description: '', 
-    			          name: 'BuildN' 
-    			          ]     ]
-    		        )
+    			def buildN = input(
+    			    id: 'userInput', 
+    			    message: 'Select build to deploy', 
+    			    parameters: [ [
+    			      $class: 'ChoiceParameterDefinition', 
+    			      choices: "${jobs}", 
+    			      description: '', 
+    			      name: 'BuildN' 
+    			    ] ]
+    		    )
     		}
 	    }
     	stage('Port Number input') {
