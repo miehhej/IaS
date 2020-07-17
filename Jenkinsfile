@@ -2,33 +2,132 @@ pipeline {
     agent any
 
     tools {
-        // Install the Maven version configured as "M3" and add it to the path.
-        maven "M3"
+        maven "maven363"
+      //  ansible "ansible"
     }
-
-    stages {
-        stage('Build') {
-            steps {
-                // Get some code from a GitHub repository
-                git 'https://github.com/miehhej/spring-boot.git'
-
-                // Run Maven on a Unix agent.
-                //sh "mvn -Dmaven.test.failure.ignore=true clean package"
-                sh "mvn clean install"
-
-                // To run Maven on a Windows agent, use
-                // bat "mvn -Dmaven.test.failure.ignore=true clean package"
-            }
-
-            post {
-                // If Maven was able to run the tests, even if some of the test
-                // failed, record the test results and archive the jar file.
-                success {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                    archiveArtifacts 'target/*.jar'
-                }
-            }
+    environment {
+    	WORKDIR = "./spring-boot-samples/spring-boot-sample-web-ui"
+        NEXUS_VERSION = 'nexus3'
+        NEXUS_PROTOCOL = 'http'
+        NEXUS_URL = "localhost:8081"
+        NEXUS_DOCKER_URL = "localhost:8082"
+        NEXUS_DOCKER_EXT_URL = "172.31.40.122:8082"
+        NEXUS_REPOSITORY = "GrW"
+        NEXUS_CREDENTIAL_ID = "6f6c7b81-b8ac-4229-a669-fd7701a03500"
+        host_ssh_creds = "901106e2-c876-49b7-af09-1d88e9fd6212"
+        nexus_creds = credentials("6f6c7b81-b8ac-4229-a669-fd7701a03500")
+        ARTIFACTPATH = "./spring-boot-samples/spring-boot-sample-web-ui/target/spring-boot-sample-web-ui-2.1.16.BUILD-SNAPSHOT.jar"
+    }
+    
+	stages {
+		stage('SCM checkout') {
+			steps{
+				git branch: '2.1.x', url: 'https://github.com/miehhej/spring-boot.git'
+			}		}
+    	stage('Port Number input') {
+    		steps {
+    		// input('Do you want to proceed?')
+    			script {
+    			    
+    			    jobs = sh(
+    			      script: 'docker image ls localhost:8082/grw --format  "{{ .Tag }}" ',
+    			      returnStdout: true,
+    			    ).trim()
+    			    imageslist = "${jobs}"
+    			    // aaa = input message: 'User input required', ok: 'Release!', parameters: [choice(name: 'RELEASE_SCOPE', choices: "${imageslist}", description: 'What is the release scope?' )]
+    			    def aaa=""
+    			    echo "---------------"
+    			    echo "${jobs}"
+    			    echo "---------------"
+                    imageslist.each {
+                      aaa += it + '\n'
+                    }
+    			    echo "${imageslist}"
+    			    def selectedProperty = input(
+    			        id: 'userInput', 
+    			        message: 'Choose properties file', 
+    			        parameters: [ [
+    			          $class: 'ChoiceParameterDefinition', 
+    			          choices: "${jobs}", 
+    			          description: 'Properties', 
+    			          name: 'prop'
+    			        ] ]
+    			      )
+    			    
+    				def port = input(
+    					id:				'portnumber',
+    					message: 		'Enter Port Number JAVA_APP will listen on, 1000-65535',
+    					parameters : [string(	
+    						name:'number',
+    						defaultValue: 	'8090'
+    					)]
+    				)
+    				PN = "${port}"			    	
+    				echo "${port}"
+    			//	input('Do you want to proceed?')
+    				}
+    					}    	}
+    	stage("Build") {
+        	steps {
+				sh "mvn -DskipTests clean install -f ./spring-boot-samples/spring-boot-sample-web-ui/pom.xml"
+			}
+		}
+		stage ('Upload JAR to NEXUS') {
+			steps {
+				
+				echo "Current workspace is ${env.WORKSPACE}"
+				//sh "ls -la ${pwd()}/spring-boot-samples/spring-boot-sample-web-ui/target" 
+				script {
+					nexusArtifactUploader( 
+						credentialsId: NEXUS_CREDENTIAL_ID,
+						groupId: 'gr.id', 
+						nexusUrl: NEXUS_URL, 
+						nexusVersion: NEXUS_VERSION, 
+						protocol: NEXUS_PROTOCOL, 
+						repository: NEXUS_REPOSITORY, 
+						version: BUILD_NUMBER,
+						artifacts: [[
+							artifactId: 'spring-boot-sample-web-ui', 
+							classifier: '', 
+							file: ARTIFACTPATH,
+							type: 'jar'
+						]]
+					)
+				}          
+			}
+		}
+        stage ('Docker & Deploy to Dev') {
+        	steps {
+        		sh 'cp -f ./spring-boot-samples/spring-boot-sample-web-ui/target/spring-boot-sample-web-ui-2.1.16.BUILD-SNAPSHOT.jar ./ias'
+        		dir ('./ias'){
+        			sh "ls -la ${pwd()}"
+        			sh "docker build . -t ${NEXUS_DOCKER_URL}/grw:$BUILD_NUMBER && docker login ${NEXUS_DOCKER_URL} -u${nexus_creds_USR} -p${nexus_creds_PSW}  && docker push ${NEXUS_DOCKER_URL}/grw:$BUILD_NUMBER && docker  logout ${NEXUS_DOCKER_URL} "
+        	//		sh 'docker container stop $(docker container ls --all --quiet|grep -v 449ae5e03ac8)'
+			//	#	docker container rm $(docker container ls –aq)
+					echo "${PN}"
+        	//		sh "docker run -d  -p ${PN}:8080 --name grw_$BUILD_NUMBER ${NEXUS_DOCKER_URL}/grw:$BUILD_NUMBER"
+        	          ansiColor('xterm') {
+        				ansiblePlaybook([
+        				    playbook: './ci-playbook.yml',
+        					inventory: './hosts.ini',
+        					credentialsId: "${host_ssh_creds}",
+        					become: true,
+        					becomeUser: 'ec2-user',
+        					sudoUser: 'ec2-user',
+        					colorized: true,
+        					disableHostKeyChecking: true,
+        					extraVars : [
+          						"deployType": "CI",
+          						"build_Number": "${BUILD_NUMBER}",
+          						"src_image": "${NEXUS_DOCKER_EXT_URL}/grw:${BUILD_NUMBER}",
+          						"port_number": "${PN}"
+          					]
+          				])
+        			}
+        		}
+        	}
         }
     }
 }
+
 
