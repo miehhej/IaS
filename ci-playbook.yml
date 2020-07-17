@@ -1,11 +1,7 @@
 ---
-#- hosts: CI_hosts
+- hosts: CI_hosts
   tasks:
   - name: Log into Nexus
-#    become: yes
-#    become_user: ec2-user
-#    remote_user: ec2-user
-#    become_method: sudo
     docker_login:
 #      docker_host: unix://run/containerd/containerd.sock
       registry: 172.31.40.122:8082
@@ -21,23 +17,17 @@
       state: stopped
     loop: '{{ docker_info.containers }}'
   - name: Create JAVA_APP container on DEV
-    hosts: CI_hosts
     docker_container:
       name: "grw_{{ build_Number }}"
       image: "{{ src_image }}"
       ports:
         - "{{ port_number }}:8080/tcp"
-    when:  deployType == "CI"
   - name: Create JAVA_APP container on QA
-    - hosts: QA_hosts
         docker_container:
           name: "grw_{{ build_Number }}"
           image: "{{ src_image }}"
           ports:
             - "{{ port_number }}:8080/tcp"
-        when: {{ deployType}} == "QA"
   - name: Log out of Nexus
-#    become: yes
-#    become_user: ec2-user
     docker_login:
       state: absent
