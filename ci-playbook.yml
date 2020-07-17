@@ -27,7 +27,7 @@
       image: "{{ src_image }}"
       ports:
         - "{{ port_number }}:8080/tcp"
-    when: "{{ deployType}}" == "CI"
+    when:  deployType == "CI"
   - name: Create JAVA_APP container on QA
     - hosts: QA_hosts
         docker_container:
