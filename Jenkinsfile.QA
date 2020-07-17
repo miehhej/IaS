@@ -14,7 +14,7 @@ pipeline {
         ARTIFACTPATH = "./spring-boot-samples/spring-boot-sample-web-ui/target/spring-boot-sample-web-ui-2.1.16.BUILD-SNAPSHOT.jar"
     }
 	stages {
-	    stage('Build #) {
+	    stage('Build #') {
 	      jobs = sh(
     			      script: 'docker image ls localhost:8082/grw --format  "{{ .Tag }}" ',
     			      returnStdout: true,
