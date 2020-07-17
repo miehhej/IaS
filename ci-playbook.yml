@@ -1,5 +1,5 @@
 ---
-- hosts: CI_hosts
+#- hosts: CI_hosts
   tasks:
   - name: Log into Nexus
 #    become: yes
@@ -20,7 +20,8 @@
       name: '{{ item.Names[0] | regex_replace("^/", "") }}'
       state: stopped
     loop: '{{ docker_info.containers }}'
-  - name: Create JAVA_APP container
+  - name: Create JAVA_APP container on DEV
+    hosts: CI_hosts
 #    become: yes
 #    become_user: ec2-user
     docker_container:
@@ -28,6 +29,15 @@
       image: "{{ src_image }}"
       ports:
         - "{{ port_number }}:8080/tcp"
+    when: {{ deployType}} == "CI"
+  - name: Create JAVA_APP container on QA
+    hosts: QA_hosts
+    docker_container:
+      name: "grw_{{ build_Number }}"
+      image: "{{ src_image }}"
+      ports:
+        - "{{ port_number }}:8080/tcp"
+    when: {{ deployType}} == "QA"
   - name: Log out of Nexus
 #    become: yes
 #    become_user: ec2-user
