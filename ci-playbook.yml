@@ -22,22 +22,20 @@
     loop: '{{ docker_info.containers }}'
   - name: Create JAVA_APP container on DEV
     hosts: CI_hosts
-#    become: yes
-#    become_user: ec2-user
     docker_container:
       name: "grw_{{ build_Number }}"
       image: "{{ src_image }}"
       ports:
         - "{{ port_number }}:8080/tcp"
-    when: {{ deployType}} == "CI"
+    when: "{{ deployType}}" == "CI"
   - name: Create JAVA_APP container on QA
-    hosts: QA_hosts
-    docker_container:
-      name: "grw_{{ build_Number }}"
-      image: "{{ src_image }}"
-      ports:
-        - "{{ port_number }}:8080/tcp"
-    when: {{ deployType}} == "QA"
+    - hosts: QA_hosts
+        docker_container:
+          name: "grw_{{ build_Number }}"
+          image: "{{ src_image }}"
+          ports:
+            - "{{ port_number }}:8080/tcp"
+        when: {{ deployType}} == "QA"
   - name: Log out of Nexus
 #    become: yes
 #    become_user: ec2-user
