@@ -50,8 +50,8 @@ pipeline {
     			          $class: 'ChoiceParameterDefinition', 
     			          choices: "${jobs}", 
     			          description: 'Properties', 
-    			          name: 'BuildN' )]
-    			        ] ]
+    			          name: 'BuildN' ]
+    			        ] 
     			      )
     				def port = input(
     					id:				'portnumber',
